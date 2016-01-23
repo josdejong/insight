@@ -6,6 +6,7 @@ body, html {
   overflow: hidden;
 
   font-family: "Droid Sans", sans-serif;
+  color: #4d4d4d;
 }
 
 #app {
@@ -18,6 +19,7 @@ body, html {
   overflow-x: hidden;
   overflow-y: auto;
 
+  box-sizing: border-box;
   padding: 10px;
 }
 
@@ -31,6 +33,7 @@ body, html {
   overflow-x: hidden;
   overflow-y: auto;
 
+  box-sizing: border-box;
   padding: 10px;
   background-color: lightyellow;
   border-left: 1px solid gold;

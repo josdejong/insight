@@ -1,4 +1,80 @@
 
 .app {
+  position: relative;
+}
 
+.searchInput,
+.searchButton {
+  padding: 5px 10px;
+}
+
+.searchButton {
+  margin-left: 10px;
+}
+
+.searching {
+  color: gray;
+}
+
+.info {
+  margin: 20px 0;
+}
+
+.album {
+  border-top: 1px solid lightgray;
+  padding: 10px 0 10px 0;
+  margin: 10px 0 10px 0;
+}
+
+.album-image {
+  float: left;
+  margin-right: 20px;
+  width: 150px;
+  height: 150px;
+}
+
+.album-menu {
+  float: right;
+}
+
+.album-header {
+}
+
+.album-medium {
+  color: gray;
+}
+
+.album-title {
+  font-weight: bold;
+}
+
+.album-amount {
+  margin: 20px 0;
+}
+
+.album-amount,
+.cart-amount {
+  color: #ec422d;
+}
+
+.cart-overview {
+  position: absolute;
+  top: 0;
+  right: 20px;
+
+  display: inline-block;
+  border: 1px solid dodgerblue;
+  border-radius: 3px;
+  background: #aedaff;
+  padding: 10px;
+}
+
+.cart-overview-header {
+  font-weight: bold;
+  margin: 0 0 10px 0;
+}
+
+.cart-num {
+  font-weight: bold;
+  margin: 10px 0;
 }
