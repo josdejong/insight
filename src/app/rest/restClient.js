@@ -17,7 +17,7 @@ export default {
   },
 
   // usage: put('/pay', [...])  where the body contains the cart items
-  put: function (url, body) {
+  post: function (url, body) {
     return fakeNetworkDelay(600, 1200)
         .then(() => Promise.resolve('Thanks for your purchase!'));
   }

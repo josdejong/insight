@@ -24,7 +24,7 @@ export default class CartItem extends Component {
             value={this.props.number}
             className="cart-item-number"
             disabled={this.props.freeze}
-            onChange={this.handleChangeNum.bind(this)}
+            onChange={function () { /* keep React warnings quiet... */ } }
             onInput={this.handleChangeNum.bind(this)} />
         </div>
         <div className="album-amount">

@@ -3,10 +3,24 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import App from './app/App';
+import restClient from './app/rest/restClient';
 import Debugger from './debugger/Debugger';
 
-let app = <App />;
-let debug = <Debugger component={app} />;
+let debuggr = ReactDOM.render(<Debugger />, document.getElementById('debugger'));
+debuggr.monitorRestClient(restClient);
 
-ReactDOM.render(app, document.getElementById('app'));
-ReactDOM.render(debug, document.getElementById('debugger'));
+let app = ReactDOM.render(<App />, document.getElementById('app'));
+debuggr.monitorComponent(app);
+
+function trace() {
+  return new Error().stack.split('\n')
+}
+
+function add() {
+
+}
+
+
+function test() {
+  add();
+}

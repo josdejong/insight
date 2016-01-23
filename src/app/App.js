@@ -1,10 +1,10 @@
 'use strict';
 
-import React from 'react';
-import { Component } from 'react';
+import React, { Component } from 'react';
 import restClient from './rest/restClient';
 import Album from './Album';
 import CartItem from './CartItem';
+import Immutable from 'seamless-immutable';
 
 export default class App extends Component {
   constructor (props) {
@@ -16,32 +16,34 @@ export default class App extends Component {
       searching: false,
       purchasing: false,
       albums: [],
-      cart: []
+      cart: Immutable([])
     };
 
     this.pages = {
       home: this.renderHome,
       cart: this.renderCart,
       thanks: this.renderThanks
-    }
+    };
   }
 
   render() {
     let renderPage = this.pages[this.state.page] || this.pages['home'];
 
     return <div className="app">
-      <h1>The Music Shop</h1>
+      <div className="app-centered">
+        <h1 className="app-logo">The Music Shop</h1>
 
-      <div className="menu">
-        <a className="menu-item" href="#" onClick={this.goToPage.bind(this, 'home')}>Home</a>
-        <a className="menu-item" href="#" onClick={this.goToPage.bind(this, 'cart')}>
-          Cart {this.renderCartStatus()}
-        </a>
+        <div className="menu">
+          <a className="menu-item" href="#" onClick={this.goToPage.bind(this, 'home')}>Home</a>
+          <a className="menu-item" href="#" onClick={this.goToPage.bind(this, 'cart')}>
+            Cart {this.renderCartStatus()}
+          </a>
+        </div>
+
+        {
+           renderPage.bind(this)()
+        }
       </div>
-
-      {
-         renderPage.bind(this)()
-      }
     </div>;
   }
 
@@ -55,6 +57,7 @@ export default class App extends Component {
     return <div className="page-home">
         <div>
           <input
+              type="text"
               ref="searchInput"
               className="searchInput"
               value={this.state.query}
@@ -92,15 +95,7 @@ export default class App extends Component {
   renderCart () {
     return <div className="page-cart">
       {
-        this.state.cart.length > 0
-          ? this.state.cart.map(item =>
-              <CartItem
-                  {...item}
-                  key={item.album.title}
-                  freeze={this.state.purchasing}
-                  onRemove={this.handleRemoveItem.bind(this)}
-                  onChangeNumber={this.handleChangeNumber.bind(this)} />)
-          : <div className="info">(your cart is empty)</div>
+        this.renderCartContents()
       }
       <div className="cart-footer">
         <div className="cart-amount">
@@ -121,6 +116,21 @@ export default class App extends Component {
     </div>;
   }
 
+  renderCartContents () {
+    if (this.state.cart.length > 0) {
+      return this.state.cart.asMutable().map(item =>
+          <CartItem
+              {...item}
+              key={item.album.title}
+              freeze={this.state.purchasing}
+              onRemove={this.handleRemoveItem.bind(this)}
+              onChangeNumber={this.handleChangeNumber.bind(this)} />);
+    }
+    else {
+      return <div className="info">(your cart is empty)</div>;
+    }
+  }
+
   renderThanks() {
     return <div className="page-thanks">
         <p>
@@ -131,13 +141,10 @@ export default class App extends Component {
         </p>
       </div>;
   }
-  
-  componentWillMount () {
-    this.search('');
-  }
 
   componentDidMount () {
     this.refs.searchInput.focus();
+    this.handleSearch();
   }
 
   handleSearch() {
@@ -152,16 +159,22 @@ export default class App extends Component {
 
   // add an album to the cart
   handleAddItem (album) {
-    // TODO: use immutable js
     let cart = this.state.cart;
-    let item = cart.find(item => item.album.title === album.title);
-    if (!item) {
-      item = {album, number: 1};
-      cart.push(item);
+
+    let exists = cart.some(item => item.album.title === album.title);
+
+    if (exists) {
+      cart = cart.map(function(item) {
+        return (item.album.title === album.title)
+            ? item.set('number', item.number + 1)
+            : item;
+      });
     }
     else {
-      item.number++;
+      let item = Immutable({album, number: 1});
+      cart = cart.concat(item);
     }
+
     this.setState({cart})
   }
 
@@ -176,10 +189,9 @@ export default class App extends Component {
     // we will leave that as is for the sake of simplicity
     this.setState({
       cart: this.state.cart.map(item => {
-        if (item.album.title === title) {
-          item.number = number;
-        }
-        return item;
+        return (item.album.title === title)
+          ? item.set('number', number)
+          : item;
       })
     });
   }
@@ -190,7 +202,7 @@ export default class App extends Component {
     this.setState({searching: true});
 
     restClient.get('/music?q=' + query)
-        .then(albums => this.setState({albums}))
+        .then(albums => this.setState({ albums }))
         .catch(err => console.error(err))
         .then(() => this.setState({searching: false}));
   }
@@ -198,7 +210,7 @@ export default class App extends Component {
   purchase () {
     this.setState({purchasing: true});
 
-    restClient.put('/purchase', this.state.cart.slice(0))
+    restClient.post('/purchase', this.state.cart.slice(0))
         .then(response => {
           this.setState({ page: 'thanks', cart: [] })
         })
@@ -232,3 +244,5 @@ function toNumber (x) {
   let number = parseFloat(x);
   return isNaN(number) ? 0 : number;
 }
+
+window.Immutable = Immutable;
