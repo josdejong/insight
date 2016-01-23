@@ -6,19 +6,25 @@ export default {
   // usage: get('/music?q=adele')
   get: function (url) {
     if (contains(url, '/music')) {
-      var query = url.split('=').pop(); // yeah, this is just a mock...
-      return findMusic(query)
-          .then(fakeNetworkDelay);
+      let query = url.split('=').pop(); // yeah, this is just a mock...
+      return fakeNetworkDelay(200, 600)
+          .then(() => findMusic(query));
     }
     else {
-      return Promise.resolve('404 Not found')
-          .then(fakeNetworkDelay);
+      return fakeNetworkDelay(200, 600)
+          .reject('404 Not found');
     }
+  },
+
+  // usage: put('/pay', [...])  where the body contains the cart items
+  put: function (url, body) {
+    return fakeNetworkDelay(600, 1200)
+        .then(() => Promise.resolve('Thanks for your purchase!'));
   }
 };
 
 function findMusic (query) {
-  var results = music.filter(album => {
+  let results = music.filter(album => {
     return contains(album.artist, query) || contains(album.title, query);
   });
 
@@ -31,13 +37,13 @@ function contains (text, search) {
 }
 
 // delay resolving a Promise
-function fakeNetworkDelay () {
-  let args = arguments;
-  let delay = 200 + Math.random() * 400;
-
+function fakeNetworkDelay (min, max) {
+  let delay = random(min, max);
   return new Promise(function (resolve, reject) {
-    setTimeout(function () {
-      resolve.apply(resolve, args);
-    }, delay);
+    setTimeout(resolve, delay);
   });
+}
+
+function random (min, max) {
+  return min + Math.random() * (max - min);
 }
