@@ -12,6 +12,10 @@
   font-family: 'Gloria Hallelujah', cursive;
 }
 
+.app-logo-colored {
+  color: #ec422d;
+}
+
 .menu {
   border-top: 1px solid dodgerblue;
   border-bottom: 1px solid dodgerblue;

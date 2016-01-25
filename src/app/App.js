@@ -31,7 +31,10 @@ export default class App extends Component {
 
     return <div className="app">
       <div className="app-centered">
-        <h1 className="app-logo">The Music Shop</h1>
+        <h1 className="app-logo">
+          <span className='app-logo-colored'>&lt;&lt;</span>
+          The Music Shop
+          <span className='app-logo-colored'>&gt;&gt;</span></h1>
 
         <div className="menu">
           <a className="menu-item" href="#" onClick={this.goToPage.bind(this, 'home')}>Home</a>

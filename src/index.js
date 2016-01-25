@@ -10,17 +10,5 @@ let debuggr = ReactDOM.render(<Debugger />, document.getElementById('debugger'))
 debuggr.monitorRestClient(restClient);
 
 let app = ReactDOM.render(<App />, document.getElementById('app'));
-debuggr.monitorComponent(app);
-
-function trace() {
-  return new Error().stack.split('\n')
-}
-
-function add() {
-
-}
-
-
-function test() {
-  add();
-}
+debuggr.monitorState(app, ['page', 'query', 'searching', 'purchasing']);
+// TODO: the monitored states should be runtime configurable
