@@ -4,18 +4,35 @@ insight
 A debug tooling experiment.
 
 
+## Use
 
-### Usage
+To use the latest bundled demo application, open the file index.html in your browser.
+
+
+## Develop
+
+To develop the application, install dependencies and start a hot-reload server:
 
 ```
 npm install
 npm start
 ```
 
-open http://localhost:3000 in your browser
+Open [http://localhost:3000/develop.html](http://localhost:3000/develop.html) in your browser
 
 
-### Linting
+## Build
+
+To generate a bundled file which can be run as a static web page, run:
+
+```
+npm run bundle
+```
+
+The static website can be opened by opening the file index.html in your browser.
+
+
+## Linting
 
 This boilerplate project includes React-friendly ESLint configuration.
 
@@ -23,6 +40,6 @@ This boilerplate project includes React-friendly ESLint configuration.
 npm run lint
 ```
 
-### Misc
+## Misc
 
 This project was started with ease thanks to [react-hot-boilerplate](https://github.com/gaearon/react-hot-boilerplate).

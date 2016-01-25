@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "description": "A debug tooling experiment",
   "scripts": {
+    "bundle": "webpack",
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",
     "lint": "eslint src"
