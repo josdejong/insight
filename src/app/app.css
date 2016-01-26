@@ -1,0 +1,156 @@
+
+.app {
+  position: relative;
+}
+
+.app-centered {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.app-logo {
+  font-family: 'Gloria Hallelujah', cursive;
+}
+
+.app-logo-colored {
+  color: #ec422d;
+}
+
+.menu {
+  border-top: 1px solid dodgerblue;
+  border-bottom: 1px solid dodgerblue;
+  background: #71bdff;
+
+  margin: 20px 0;
+}
+
+.app input[type="button"] {
+  background: white;
+  border: 1px solid lightgray;
+  border-radius: 2px;
+  box-shadow: 0 0 4px 2px #f5f5f5;
+  padding: 5px 10px;
+}
+
+.app input[type="button"]:hover {
+  background: #f1f1f1;
+}
+
+input[type="button"]:disabled {
+  background: lightgray;
+}
+
+.app input[type="text"] {
+  padding: 5px 10px;
+  border-radius: 2px;
+  border: 1px solid lightgray;
+}
+
+.menu-item {
+  display: inline-block;
+  padding: 10px 40px;
+  border-right: 1px solid #c6e3ff;
+  background: #71bdff;
+  color: white;
+  text-decoration: none;
+  transition: all .3s;
+  text-transform: uppercase;
+}
+
+.menu-item:hover {
+  background: #aedaff;
+}
+
+.searchButton {
+  margin-left: 10px;
+}
+
+.searching {
+  color: gray;
+}
+
+.info {
+  margin: 20px 0;
+}
+
+.album {
+  border-top: 1px solid lightgray;
+  padding: 10px 0 10px 0;
+  margin: 10px 0 10px 0;
+}
+
+.album-image {
+  float: left;
+  margin-right: 20px;
+}
+
+.album-image img {
+  width: 75px;
+  height: 75px;
+}
+
+.album-menu {
+  float: right;
+  text-align: right;
+  margin-left: 10px;
+}
+
+.album-header {
+}
+
+.album-medium {
+  color: gray;
+}
+
+.album-title {
+  font-weight: bold;
+}
+
+.album-amount {
+  margin: 20px 0;
+}
+
+.album-amount,
+.cart-amount {
+  color: #ec422d;
+}
+
+
+.cart-item,
+.cart-footer {
+  border-top: 1px solid lightgray;
+  padding: 10px 0 10px 0;
+  margin: 10px 0 10px 0;
+}
+
+.cart-footer {
+  text-align: right;
+}
+
+.cart-item-number {
+  width: 32px;
+  margin: 10px 0;
+}
+
+.cart-amount {
+  text-align: right;
+  font-weight: bold;
+}
+
+input[type="button"].cart-checkout {
+  padding: 10px 30px;
+  margin: 20px 0;
+  background: #76bd47;
+  color: white;
+  font-weight: bold;
+  border: none;
+  border-radius: 3px;
+}
+
+input[type="button"].cart-checkout:hover {
+  background: #82d14f;
+}
+
+input[type="button"].cart-checkout:disabled {
+  background: lightgray;
+}
