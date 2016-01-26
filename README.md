@@ -15,6 +15,7 @@ It aims to:
 - There is a large delay (~20ms) between events which should occur almost simultaneously.
   Probably the Debugger hooks into the React cycles in a bad way.
 - There is not yet ful support for touch devices.
+- The Timeline does not yet stack overlapping events.
 
 
 ## Current state
