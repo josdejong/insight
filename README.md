@@ -1,7 +1,30 @@
 insight
 =====================
 
-A debug tooling experiment.
+A debug tooling experiment. This demo is inspired by the talk
+[Inventing on principle](https://www.youtube.com/watch?v=PUv66718DII) by Bret Victor.
+It aims to:
+
+- Show a view with the changes in your application over time on a timeline.
+- Show the relations between all changes, where do they come from?
+- Allowing to to time travel through your application: go back and forth
+
+
+## Known issues
+
+- There is a large delay (~20ms) between events which should occur almost simultaneously.
+  Probably the Debugger hooks into the React cycles in a bad way.
+- There is not yet ful support for touch devices.
+
+
+## Current state
+
+- [x] Create a simple demo application, a basic web shop.
+- [x] Create a debugger showing a Timeline.
+- [x] Let the debugger monitor network, state changes, and method invocations.
+- [ ] Show the relation between events, like a network event caused by some button click.
+- [ ] Implement time travel.
+- [ ] Select the methods and states you're interested in in the Debugger UI.
 
 
 ## Use
