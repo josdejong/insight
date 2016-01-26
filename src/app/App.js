@@ -226,15 +226,21 @@ export default class App extends Component {
   }
 
   totalProducts () {
+    // Here is a bug (on purpose): number becomes a string when changing
+    // it on the page "cart". It can contain an invalid number in which case
+    // summation fails.
     return this.state.cart
-        .map(item => toNumber(item.number))
+        .map(item => item.number)
         .reduce(add);
   }
 
   totalAmount () {
+    // Here is a bug (on purpose): number becomes a string when changing
+    // it on the page "cart". It can contain an invalid number in which case
+    // summation fails.
     return this.state.cart
         .reduce(function (total, item) {
-          return total + toNumber(item.number) * item.album.amount;
+          return total + item.number * item.album.amount;
         }, 0);
   }
 }

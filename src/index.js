@@ -10,10 +10,10 @@ let debuggr = ReactDOM.render(<Debugger />, document.getElementById('debugger'))
 debuggr.monitorRestClient(restClient);
 
 let app = ReactDOM.render(<App />, document.getElementById('app'));
-debuggr.monitorState(app, ['page', 'query', 'searching', 'purchasing']);
 debuggr.monitorMethods(app, [
   'handleSearch',
   'handleAddItem', 'handleRemoveItem', 'handleChangeNumber',
   'handlePurchase'
 ]);
+debuggr.monitorState(app, ['page', 'query', 'searching', 'purchasing']);
 // TODO: the monitored states and methods should be runtime configurable

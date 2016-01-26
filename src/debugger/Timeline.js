@@ -19,6 +19,8 @@ const COLORS = [
  * <Timeline
  *      start={number | Date}
  *      end={number | Date}
+ *      simulatedTime={number | Date}
+ *      realTime={number | Date}
  *      groups={Array.<{name: string}>}
  *      items={Array.<{id: string, start: number | Date, end: number | Date | undefined, group: string, text: string | Component, popover: string | Component>}
  *      onChange={function(start, end) } />
@@ -29,13 +31,16 @@ export default class Timeline extends Component {
     let timelineHeight = 40 * (groups.length + 2);
 
     return <Hammer
-        onPanStart={this.handlePanStart.bind(this)}
         onPan={this.handlePan.bind(this)}
+        onPanEnd={this.handlePanEnd.bind(this)}
         onPinch={this.handlePinch.bind(this)} >
-    <div className="timeline" style={{height: timelineHeight}} >
+    <div className="timeline"
+         onMouseDown={this.handleMouseDown.bind(this)}
+         style={{height: timelineHeight}} >
         <div className="timeline-contents" ref="contents" >
           { this.renderAxis() }
           { groups.map(this.renderGroup.bind(this)) }
+          { this.renderSimulatedTime() }
         </div>
         <div className="timeline-groups">
           { groups.map(this.renderGroupLabel.bind(this)) }
@@ -72,7 +77,6 @@ export default class Timeline extends Component {
       timeStep.next();
       total++;
     }
-
 
     return <div className="timeline-axis">
       <div className="timeline-axis-grids">
@@ -140,6 +144,21 @@ export default class Timeline extends Component {
     </div>;
   }
 
+  renderSimulatedTime () {
+    if (!this.props.simulatedTime) {
+      return null;
+    }
+
+    let style = {
+      left: this.timeToScreen(this.props.simulatedTime)
+    };
+    return <div className="timeline-simulated-time" ref="simulatedTime" style={style}>
+      <div className="timeline-simulated-time-bar"></div>
+      <div className="timeline-simulated-time-lt">&#9664;</div>
+      <div className="timeline-simulated-time-gt">&#9654;</div>
+    </div>
+  }
+
   componentDidMount () {
     this.refs.contents.addEventListener('mousewheel', this.handleWheel.bind(this));
     this.refs.contents.addEventListener('DOMMouseScroll', this.handleWheel.bind(this)); // Firefox
@@ -155,22 +174,47 @@ export default class Timeline extends Component {
     });
   }
 
-  handlePanStart () {
+  // FIXME: use also listen for touch down, fully support touch.
+  handleMouseDown (event) {
+    var onSimulatedTime = (event.target === this.refs.simulatedTime) ||
+        isChildOf(event.target, this.refs.simulatedTime);
+
     panStartState = {
       start: this.props.start,
-      end: this.props.end
+      end: this.props.end,
+      simulatedTime: this.props.simulatedTime,
+      onSimulatedTime: onSimulatedTime
     };
   }
 
   handlePan (event) {
+    if (!panStartState) {
+      this.handleMouseDown(event);
+    }
+
     let contents = this.refs.contents;
     let width = contents.getBoundingClientRect().width;
     let timeDiff = (panStartState.start - panStartState.end) / width * event.deltaX;
 
-    this.props.onChange({
-      start: panStartState.start.valueOf() + timeDiff,
-      end: panStartState.end.valueOf() + timeDiff
-    });
+    if (panStartState.onSimulatedTime) {
+      // drag the simulated time bar
+      this.props.onChange({
+        simulatedTime: panStartState.simulatedTime.valueOf() - timeDiff
+      });
+    }
+    else {
+      // drag the timeline
+      this.props.onChange({
+        start: panStartState.start.valueOf() + timeDiff,
+        end: panStartState.end.valueOf() + timeDiff
+      });
+    }
+  }
+
+  handlePanEnd (event) {
+    if (panStartState && panStartState.onSimulatedTime) {
+      this.props.onSimulatedTime(panStartState.simulatedTime.valueOf());
+    }
   }
 
   handlePinch (event) {
@@ -334,3 +378,21 @@ export default class Timeline extends Component {
 }
 
 let panStartState = null;
+
+/**
+ * Test whether an HTML is a child of a certain parent element
+ * @param element
+ * @param parent
+ */
+function isChildOf(element, parent) {
+  let e = element.parentNode;
+  while (e) {
+    if (e === parent) {
+      return true;
+    }
+
+    e = e.parentNode;
+  }
+
+  return false;
+}

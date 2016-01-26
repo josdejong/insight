@@ -9,14 +9,20 @@ export default class Debugger extends Component {
   constructor (props) {
     super(props);
 
-    let start = new Date().valueOf();
+    let now = new Date().valueOf();
     this.state = {
-      start: start,
-      end: start + 10 * 1000,  // 10 sec
+      // state for the Timeline
+      start: now - 5 * 1000,
+      end: now + 10 * 1000,  // 10 sec
+      simulatedTime: now,
+      realTime: now,
+
       groups: Immutable([]),
       events: Immutable([])
     };
 
+    this.component = null;
+    this.componentStates = [];
   }
 
   render() {
@@ -55,12 +61,18 @@ export default class Debugger extends Component {
       <div className="debugger-menu">
         <input type="button" value="toggle orientation" onClick={this.toggleOrientation.bind(this)} />
       </div>
+      <p>
+        The Timeline below shows network requests, method calls, and state changes over time.
+      </p>
       <Timeline
           start={this.state.start}
           end={this.state.end}
+          simulatedTime={this.state.simulatedTime}
+          realTime={this.state.realTime}
           groups={this.state.groups}
           items={items}
-          onChange={this.handleTimelineChange.bind(this)} />
+          onChange={this.handleTimelineChange.bind(this)}
+          onSimulatedTime={this.handleSimulatedTime.bind(this)} />
     </div>;
   }
 
@@ -85,6 +97,9 @@ export default class Debugger extends Component {
    * @param {Array.<string>} names  The names of the variables in the state to be monitored
    */
   monitorState (component, names) {
+    let debuggr = this;
+    this.component = component;
+
     // add new groups to the timeline, one for each monitored state
     let groups = names.map(name => {
       return {name};
@@ -96,7 +111,6 @@ export default class Debugger extends Component {
     // listen for changes in the state, and emit debugger events on changes
     let original = (component.componentWillUpdate || function () {}).bind(component);
     component.componentWillUpdate = (nextProps, nextState) => {
-
       names.forEach(name => {
         let before = component.state[name];
         let after = nextState[name];
@@ -152,7 +166,7 @@ export default class Debugger extends Component {
         after: cloneDeep(after)
       });
 
-      this.setState({events: this.state.events.concat(event)});
+      this.addEvent(event);
 
       console.log('state event', event);
     }
@@ -173,7 +187,7 @@ export default class Debugger extends Component {
         url: url,
         body: body
       });
-      debuggr.setState({events: debuggr.state.events.concat(tempEvent)});
+      debuggr.addEvent(tempEvent);
 
       function finish (response) {
         let end = Date.now();
@@ -183,9 +197,7 @@ export default class Debugger extends Component {
         });
 
         // replace the temp event with the final event
-        debuggr.setState({events: debuggr.state.events.map(event => {
-          return event.id === eventId ? finalEvent : event;
-        })});
+        debuggr.updateEvent(finalEvent);
 
         console.log('network event', finalEvent);
       }
@@ -237,7 +249,7 @@ export default class Debugger extends Component {
 
       console.log('method event', event);
       setTimeout(() => {
-        debuggr.setState({events: debuggr.state.events.concat(event)});
+        debuggr.addEvent(event);
       }, 0);
 
       // TODO: if promise, await until it resolves and then finish the event
@@ -246,12 +258,29 @@ export default class Debugger extends Component {
     }
   }
 
+  addEvent (event) {
+    this.setState({events: this.state.events.concat(event)});
+  }
+
+  updateEvent (event) {
+    this.setState({
+      events: this.state.events.map(e => {
+        return e.id === event.id ? event : e;
+      })
+    });
+  }
+
   /**
    * Store changed state of the Timeline in our state
-   * @param {{start: number, end: number}} timelineState
+   * @param {{start: number, end: number, currentTime}} timelineState
    */
   handleTimelineChange (timelineState) {
     this.setState(timelineState);
+  }
+
+  handleSimulatedTime (simulatedTime) {
+    // TODO: implement time travel...
+    alert('And now the time travel magic should happen... coming soon');
   }
 
   // TODO: rework orientation, it changes the orientation of the app itself
