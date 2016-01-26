@@ -19,8 +19,15 @@ export default class TimelineItem extends Component {
       backgroundColor: this.props.color
     };
 
-    return <div className="timeline-item timeline-item-point" style={style}>
-      <span className="timeline-item-inner">{this.props.text}</span>
+    return <div className="timeline-item timeline-item-point timeline-popover-anchor" style={style}>
+      <div className="timeline-item-point-contents">{this.props.text}</div>
+      {
+        this.props.popover
+            ? <div className="timeline-popover timeline-below">
+                {this.props.popover}
+              </div>
+            : null
+      }
     </div>
   }
 
@@ -32,8 +39,15 @@ export default class TimelineItem extends Component {
       backgroundColor: this.props.color
     };
 
-    return <div className="timeline-item timeline-item-range" style={style}>
-      {this.props.text}
+    return <div className="timeline-item timeline-item-range timeline-popover-anchor" style={style}>
+      <div className="timeline-item-range-contents">{this.props.text}</div>
+      {
+        this.props.popover
+            ? <div className="timeline-popover timeline-below">
+                {this.props.popover}
+              </div>
+            : null
+      }
     </div>
   }
 }

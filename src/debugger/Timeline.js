@@ -60,16 +60,14 @@ export default class Timeline extends Component {
     let total = 0;
     let MAX = 100;
     let timeStep = new TimeStep(start, end, step);
-    timeStep.setFormat({
-      minorLabels: {}
-    })
+
     timeStep.start();
     while (timeStep.hasNext() && total < MAX) {
       let time = timeStep.getCurrent().valueOf();
       labelTimes.push({
         time,
         x: this.timeToScreen(time),
-        label: timeStep.getLabelMinor(time)
+        label: timeStep.getLabel(time)
       });
       timeStep.next();
       total++;

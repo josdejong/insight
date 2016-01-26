@@ -37,14 +37,14 @@ export default class App extends Component {
           <span className='app-logo-colored'>&gt;&gt;</span></h1>
 
         <div className="menu">
-          <a className="menu-item" href="#" onClick={this.goToPage.bind(this, 'home')}>Home</a>
-          <a className="menu-item" href="#" onClick={this.goToPage.bind(this, 'cart')}>
+          <a className="menu-item" href="#" onClick={() => this.goToPage('home')}>Home</a>
+          <a className="menu-item" href="#" onClick={() => this.goToPage('cart')}>
             Cart {this.renderCartStatus()}
           </a>
         </div>
 
         {
-           renderPage.bind(this)()
+           renderPage.call(this)
         }
       </div>
     </div>;
@@ -65,12 +65,12 @@ export default class App extends Component {
               className="searchInput"
               value={this.state.query}
               placeholder="Enter a title or artist..."
-              onInput={this.handleSearch.bind(this)} />
+              onInput={() => this.handleSearch()} />
           <input
               type="button"
               className="searchButton"
               value="Search"
-              onClick={this.handleSearch.bind(this)} />
+              onClick={() => this.handleSearch()} />
           {
             this.state.searching
                 ? <span className="searching"> searching...</span>
@@ -83,7 +83,7 @@ export default class App extends Component {
               return <Album
                   {...album}
                   key={album.title}
-                  onAdd={this.handleAddItem.bind(this, album)} />
+                  onAdd={() => this.handleAddItem(album)} />
             })
           }
           {
@@ -113,7 +113,7 @@ export default class App extends Component {
               value="Checkout"
               disabled={this.state.purchasing || this.state.cart.length === 0}
               className="cart-checkout"
-              onClick={this.purchase.bind(this)} />
+              onClick={() => this.handlePurchase()} />
         </div>
       </div>
     </div>;
@@ -126,8 +126,8 @@ export default class App extends Component {
               {...item}
               key={item.album.title}
               freeze={this.state.purchasing}
-              onRemove={this.handleRemoveItem.bind(this)}
-              onChangeNumber={this.handleChangeNumber.bind(this)} />);
+              onRemove={() => this.handleRemoveItem()}
+              onChangeNumber={(title, number) => this.handleChangeNumber(title, number)} />);
     }
     else {
       return <div className="info">(your cart is empty)</div>;
@@ -140,7 +140,7 @@ export default class App extends Component {
           Thanks for your purchase!
         </p>
         <p>
-          <input type="button" value="Back to home" onClick={this.goToPage.bind(this, 'home')} />
+          <input type="button" value="Back to home" onClick={() => this.goToPage('home')} />
         </p>
       </div>;
   }
@@ -204,16 +204,16 @@ export default class App extends Component {
     // it does not switch to the latest result
     this.setState({searching: true});
 
-    restClient.get('/music?q=' + query)
+    return restClient.get('/music?q=' + query)
         .then(albums => this.setState({ albums }))
         .catch(err => console.error(err))
         .then(() => this.setState({searching: false}));
   }
 
-  purchase () {
+  handlePurchase () {
     this.setState({purchasing: true});
 
-    restClient.post('/purchase', this.state.cart.slice(0))
+    return restClient.post('/purchase', this.state.cart.slice(0))
         .then(response => {
           this.setState({ page: 'thanks', cart: [] })
         })

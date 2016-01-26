@@ -20,15 +20,35 @@ export default class Debugger extends Component {
   }
 
   render() {
-    let items = this.state.events.map(event => ({
-      id: event.id,
-      group: event.name,
-      start: event.timestamp,
-      end: event.duration ? (event.timestamp + event.duration) : undefined,
-      text: event.name == 'network'
-          ? event.method.toUpperCase() + ' ' + event.url
-          : JSON.stringify(event.after)
-    }));
+    let items = this.state.events.map(event => {
+      let text = '?';
+      let popover = null;
+
+      if (event.type === 'network') {
+        text = event.method.toUpperCase() + ' ' + event.url;
+        popover = 'url: ' + event.method.toUpperCase() + ' ' + event.url + ', ' +
+            'duration: ' + Math.round(event.duration) + 'ms';
+      }
+      if (event.type === 'state') {
+        text = JSON.stringify(event.after);
+        popover = 'before: ' + JSON.stringify(event.before) +
+            ', after: ' + JSON.stringify(event.after)
+      }
+      if (event.type === 'method') {
+        text = event.method;
+        popover = 'return value: ' + event.result;
+      }
+
+      return {
+        id: event.id,
+        group: event.name,
+        start: event.timestamp,
+        end: event.duration ? (event.timestamp + event.duration) : undefined,
+        text: text,
+        popover: popover
+        // TODO: workout popover information, show a nice table, or maybe better info in a side panel
+      }
+    });
 
     return <div className="debugger">
       <h1>Debugger</h1>
@@ -54,7 +74,7 @@ export default class Debugger extends Component {
           let originalMethod = restClient[name];
 
           if (typeof originalMethod === 'function') {
-            restClient[name] = this.overrideRestMethod(name, originalMethod);
+            restClient[name] = this.createMonitoredRestMethod(name, originalMethod);
           }
         });
   }
@@ -93,6 +113,27 @@ export default class Debugger extends Component {
   }
 
   /**
+   * Monitor method calls of a React Component
+   * @param {Component} component
+   * @param {Array.<string>} methods  The names of the methods to be monitored
+   */
+  monitorMethods (component, methods) {
+    // add new groups to the timeline, one for each monitored state
+    //let groups = methods.map(method => {
+    //  return {method};
+    //});
+    this.setState({
+      groups: this.state.groups.concat([{name: 'method'}])
+    });
+
+    // replace the methods with a monitored method
+    methods.forEach(name => {
+      let originalMethod = component[name].bind(component);
+      component[name] = this.createMonitoredMethod(name, originalMethod)
+    });
+  }
+
+  /**
    * Compare whether a variable in a components state is changed and if so,
    * emit a new debugger event.
    * @param name
@@ -104,6 +145,7 @@ export default class Debugger extends Component {
     if (changed) {
       let event = Immutable({
         id: createId(),
+        type: 'state',
         timestamp: Date.now(),
         name: name,
         before: cloneDeep(before),
@@ -112,17 +154,19 @@ export default class Debugger extends Component {
 
       this.setState({events: this.state.events.concat(event)});
 
-      console.log('event', event);
+      console.log('state event', event);
     }
   }
 
-  overrideRestMethod (name, originalMethod) {
+  createMonitoredRestMethod (name, originalMethod) {
     let debuggr = this;
 
     return function (url, body) {
+      let eventId = createId();
       let start = Date.now();
       let tempEvent = Immutable({
-        id: createId(),
+        id: eventId,
+        type: 'network',
         timestamp: start,
         name: 'network',
         method: name,
@@ -138,12 +182,12 @@ export default class Debugger extends Component {
           response: response
         });
 
-        // replace the final event
+        // replace the temp event with the final event
         debuggr.setState({events: debuggr.state.events.map(event => {
-          return event.id === finalEvent.id ? finalEvent : event;
+          return event.id === eventId ? finalEvent : event;
         })});
 
-        console.log('event', finalEvent);
+        console.log('network event', finalEvent);
       }
 
       let result = originalMethod(url, body);
@@ -167,6 +211,41 @@ export default class Debugger extends Component {
     }
   }
 
+  // TODO: merge and generalize createMonitoredMethod and createMonitoredRestMethod
+  createMonitoredMethod (name, originalMethod) {
+    let debuggr = this;
+
+    return function () {
+      let start = Date.now();
+
+      // invoke the original method
+      let result = originalMethod(...arguments);
+
+      let end = Date.now();
+      let event = Immutable({
+        id: createId(),
+        type: 'method',
+        timestamp: start,
+        //duration: end - start, // TODO: are we interested in duration of a method call here?
+        name: 'method',
+        method: name,
+        // TODO: it's problematic to store events, cannot make them immutable, not stringifiable
+        //args: argumentsToArray(arguments),
+        result: result
+        // TODO: stack
+      });
+
+      console.log('method event', event);
+      setTimeout(() => {
+        debuggr.setState({events: debuggr.state.events.concat(event)});
+      }, 0);
+
+      // TODO: if promise, await until it resolves and then finish the event
+
+      return result;
+    }
+  }
+
   /**
    * Store changed state of the Timeline in our state
    * @param {{start: number, end: number}} timelineState
@@ -186,16 +265,11 @@ export default class Debugger extends Component {
   }
 }
 
-// TODO: cleanup, redundant
-function getChanges(oldState, newState) {
-  return reduce(newState, function(result, value, key) {
-    return isEqual(value, oldState[key])
-        ? result
-        : result.set(key, value);
-  }, Immutable({}));
-}
-
-
+/**
+ * Convert an arguments "array" into a real Array
+ * @param {Arguments} args
+ * @return {Array}
+ */
 function argumentsToArray (args) {
   return Array.prototype.slice.call(args);
 }

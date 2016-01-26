@@ -1,4 +1,5 @@
 import moment from 'moment';
+import { assign } from 'lodash';
 
 /**
  * @constructor  TimeStep
@@ -22,14 +23,12 @@ import moment from 'moment';
  * The TimeStep has scales ranging from milliseconds, seconds, minutes, hours,
  * days, to years.
  *
- * Version: 1.2
- *
  * @param {Date} [start]         The start date, for example new Date(2010, 9, 21)
  *                               or new Date(2010, 9, 21, 23, 45, 00)
  * @param {Date} [end]           The end date
  * @param {Number} [minimumStep] Optional. Minimum step size in milliseconds
  */
-function TimeStep(start, end, minimumStep) {
+export default function TimeStep(start, end, minimumStep) {
   this.moment = moment;
 
   // variables
@@ -49,26 +48,14 @@ function TimeStep(start, end, minimumStep) {
 
 // Time formatting
 TimeStep.FORMAT = {
-  minorLabels: {
-    millisecond:'SSS\\m\\s',
-    second:     's\\s',
-    minute:     'HH:mm',
-    hour:       'HH:mm',
-    weekday:    'ddd Do',
-    day:        'MMM Do',
-    month:      'MMM',
-    year:       'YYYY'
-  },
-  majorLabels: {
-    millisecond:'HH:mm:ss',
-    second:     'D MMMM HH:mm',
-    minute:     'ddd D MMMM',
-    hour:       'ddd D MMMM',
-    weekday:    'MMMM YYYY',
-    day:        'MMMM YYYY',
-    month:      'YYYY',
-    year:       ''
-  }
+  millisecond:'SSS\\m\\s',
+  second:     's\\s',
+  minute:     'HH:mm',
+  hour:       'HH:mm',
+  weekday:    'ddd Do',
+  day:        'MMM Do',
+  month:      'MMM',
+  year:       'YYYY'
 };
 
 /**
@@ -86,15 +73,13 @@ TimeStep.prototype.setMoment = function (moment) {
 };
 
 /**
- * Set custom formatting for the minor an major labels of the TimeStep.
- * Both `minorLabels` and `majorLabels` are an Object with properties:
+ * Set custom formatting for the  labels of the TimeStep.
+ * Format can have properties:
  * 'millisecond', 'second', 'minute', 'hour', 'weekday', 'day', 'month', 'year'.
- * @param {{minorLabels: Object, majorLabels: Object}} format
+ * @param {Object} format
  */
 TimeStep.prototype.setFormat = function (format) {
-  // TODO: implement setFormat
-  //var defaultFormat = deepExtend({}, TimeStep.FORMAT);
-  //this.format = deepExtend(defaultFormat, format);
+  this.format = assign(this.format, format);
 };
 
 /**
@@ -112,7 +97,7 @@ TimeStep.prototype.setRange = function(start, end, minimumStep) {
   this._end = (end != undefined) ? this.moment(end.valueOf()) : new Date();
 
   if (this.autoScale) {
-    this.setMinimumStep(minimumStep);
+    this.determineStep(minimumStep);
   }
 };
 
@@ -121,14 +106,7 @@ TimeStep.prototype.setRange = function(start, end, minimumStep) {
  */
 TimeStep.prototype.start = function() {
   this.current = this._start.clone();
-  this.roundToMinor();
-};
 
-/**
- * Round the current date to the first minor date value
- * This must be executed once when the current date is set to start Date
- */
-TimeStep.prototype.roundToMinor = function() {
   // round to floor
   // IMPORTANT: we have no breaks in this switch! (this is no bug)
   // noinspection FallThroughInSwitchStatementJS
@@ -210,7 +188,7 @@ TimeStep.prototype.next = function() {
   }
 
   if (this.step != 1) {
-    // round down to the correct major value
+    // round down to the correct step value
     switch (this.scale) {
       case 'millisecond':  if(this.current.milliseconds() < this.step) this.current.milliseconds(0);  break;
       case 'second':       if(this.current.seconds() < this.step) this.current.seconds(0);  break;
@@ -241,8 +219,7 @@ TimeStep.prototype.getCurrent = function() {
 
 /**
  * Set a custom scale. Autoscaling will be disabled.
- * For example setScale('minute', 5) will result
- * in minor steps of 5 minutes, and major steps of an hour.
+ * For example setScale('minute', 5) will result in a step every 5 minutes.
  *
  * @param {{scale: string, step: number}} params
  *                               An object containing two properties:
@@ -260,8 +237,8 @@ TimeStep.prototype.setScale = function(params) {
 };
 
 /**
- * Enable or disable autoscaling
- * @param {boolean} enable  If true, autoascaling is set true
+ * Enable or disable auto-scaling
+ * @param {boolean} enable  If true, auto-scaling is set true
  */
 TimeStep.prototype.setAutoScale = function (enable) {
   this.autoScale = enable;
@@ -272,12 +249,10 @@ TimeStep.prototype.setAutoScale = function (enable) {
  * Automatically determine the scale that bests fits the provided minimum step
  * @param {Number} [minimumStep]  The minimum step size in milliseconds
  */
-TimeStep.prototype.setMinimumStep = function(minimumStep) {
+TimeStep.prototype.determineStep = function(minimumStep) {
   if (minimumStep == undefined) {
     return;
   }
-
-  //var b = asc + ds;
 
   var stepYear       = (1000 * 60 * 60 * 24 * 30 * 12);
   var stepMonth      = (1000 * 60 * 60 * 24 * 30);
@@ -320,289 +295,16 @@ TimeStep.prototype.setMinimumStep = function(minimumStep) {
 };
 
 /**
- * Snap a date to a rounded value.
- * The snap intervals are dependent on the current scale and step.
- * Static function
- * @param {Date} date    the date to be snapped.
- * @param {string} scale Current scale, can be 'millisecond', 'second',
- *                       'minute', 'hour', 'weekday, 'day', 'month', 'year'.
- * @param {number} step  Current step (1, 2, 4, 5, ...
- * @return {Date} snappedDate
- */
-TimeStep.snap = function(date, scale, step) {
-  var clone = moment(date);
-
-  if (scale == 'year') {
-    var year = clone.year() + Math.round(clone.month() / 12);
-    clone.year(Math.round(year / step) * step);
-    clone.month(0);
-    clone.date(0);
-    clone.hours(0);
-    clone.minutes(0);
-    clone.seconds(0);
-    clone.milliseconds(0);
-  }
-  else if (scale == 'month') {
-    if (clone.date() > 15) {
-      clone.date(1);
-      clone.add(1, 'month');
-      // important: first set Date to 1, after that change the month.
-    }
-    else {
-      clone.date(1);
-    }
-
-    clone.hours(0);
-    clone.minutes(0);
-    clone.seconds(0);
-    clone.milliseconds(0);
-  }
-  else if (scale == 'day') {
-    //noinspection FallthroughInSwitchStatementJS
-    switch (step) {
-      case 5:
-      case 2:
-        clone.hours(Math.round(clone.hours() / 24) * 24); break;
-      default:
-        clone.hours(Math.round(clone.hours() / 12) * 12); break;
-    }
-    clone.minutes(0);
-    clone.seconds(0);
-    clone.milliseconds(0);
-  }
-  else if (scale == 'weekday') {
-    //noinspection FallthroughInSwitchStatementJS
-    switch (step) {
-      case 5:
-      case 2:
-        clone.hours(Math.round(clone.hours() / 12) * 12); break;
-      default:
-        clone.hours(Math.round(clone.hours() / 6) * 6); break;
-    }
-    clone.minutes(0);
-    clone.seconds(0);
-    clone.milliseconds(0);
-  }
-  else if (scale == 'hour') {
-    switch (step) {
-      case 4:
-        clone.minutes(Math.round(clone.minutes() / 60) * 60); break;
-      default:
-        clone.minutes(Math.round(clone.minutes() / 30) * 30); break;
-    }
-    clone.seconds(0);
-    clone.milliseconds(0);
-  } else if (scale == 'minute') {
-    //noinspection FallthroughInSwitchStatementJS
-    switch (step) {
-      case 15:
-      case 10:
-        clone.minutes(Math.round(clone.minutes() / 5) * 5);
-        clone.seconds(0);
-        break;
-      case 5:
-        clone.seconds(Math.round(clone.seconds() / 60) * 60); break;
-      default:
-        clone.seconds(Math.round(clone.seconds() / 30) * 30); break;
-    }
-    clone.milliseconds(0);
-  }
-  else if (scale == 'second') {
-    //noinspection FallthroughInSwitchStatementJS
-    switch (step) {
-      case 15:
-      case 10:
-        clone.seconds(Math.round(clone.seconds() / 5) * 5);
-        clone.milliseconds(0);
-        break;
-      case 5:
-        clone.milliseconds(Math.round(clone.milliseconds() / 1000) * 1000); break;
-      default:
-        clone.milliseconds(Math.round(clone.milliseconds() / 500) * 500); break;
-    }
-  }
-  else if (scale == 'millisecond') {
-    var _step = step > 5 ? step / 2 : 1;
-    clone.milliseconds(Math.round(clone.milliseconds() / _step) * _step);
-  }
-  
-  return clone;
-};
-
-/**
- * Check if the current value is a major value (for example when the step
- * is DAY, a major value is each first day of the MONTH)
- * @return {boolean} true if current date is major, else false.
- */
-TimeStep.prototype.isMajor = function() {
-  if (this.switchedYear == true) {
-    this.switchedYear = false;
-    switch (this.scale) {
-      case 'year':
-      case 'month':
-      case 'weekday':
-      case 'day':
-      case 'hour':
-      case 'minute':
-      case 'second':
-      case 'millisecond':
-        return true;
-      default:
-        return false;
-    }
-  }
-  else if (this.switchedMonth == true) {
-    this.switchedMonth = false;
-    switch (this.scale) {
-      case 'weekday':
-      case 'day':
-      case 'hour':
-      case 'minute':
-      case 'second':
-      case 'millisecond':
-        return true;
-      default:
-        return false;
-    }
-  }
-  else if (this.switchedDay == true) {
-    this.switchedDay = false;
-    switch (this.scale) {
-      case 'millisecond':
-      case 'second':
-      case 'minute':
-      case 'hour':
-        return true;
-      default:
-        return false;
-    }
-  }
-
-  var date = this.moment(this.current);
-  switch (this.scale) {
-    case 'millisecond':
-      return (date.milliseconds() == 0);
-    case 'second':
-      return (date.seconds() == 0);
-    case 'minute':
-      return (date.hours() == 0) && (date.minutes() == 0);
-    case 'hour':
-      return (date.hours() == 0);
-    case 'weekday': // intentional fall through
-    case 'day':
-      return (date.date() == 1);
-    case 'month':
-      return (date.month() == 0);
-    case 'year':
-      return false;
-    default:
-      return false;
-  }
-};
-
-
-/**
- * Returns formatted text for the minor axislabel, depending on the current
+ * Returns formatted text for the current time step, depending on the current
  * date and the scale. For example when scale is MINUTE, the current time is
  * formatted as "hh:mm".
  * @param {Date} [date] custom date. if not provided, current date is taken
  */
-TimeStep.prototype.getLabelMinor = function(date) {
+TimeStep.prototype.getLabel = function(date) {
   if (date == undefined) {
     date = this.current;
   }
 
-  var format = this.format.minorLabels[this.scale];
+  var format = this.format[this.scale];
   return (format && format.length > 0) ? this.moment(date).format(format) : '';
 };
-
-/**
- * Returns formatted text for the major axis label, depending on the current
- * date and the scale. For example when scale is MINUTE, the major scale is
- * hours, and the hour will be formatted as "hh".
- * @param {Date} [date] custom date. if not provided, current date is taken
- */
-TimeStep.prototype.getLabelMajor = function(date) {
-  if (date == undefined) {
-    date = this.current;
-  }
-
-  var format = this.format.majorLabels[this.scale];
-  return (format && format.length > 0) ? this.moment(date).format(format) : '';
-};
-
-TimeStep.prototype.getClassName = function() {
-  var _moment = this.moment;
-  var m = this.moment(this.current);
-  var current = m.locale ? m.locale('en') : m.lang('en'); // old versions of moment have .lang() function
-  var step = this.step;
-
-  function even(value) {
-    return (value / step % 2 == 0) ? ' vis-even' : ' vis-odd';
-  }
-
-  function today(date) {
-    if (date.isSame(new Date(), 'day')) {
-      return ' vis-today';
-    }
-    if (date.isSame(_moment().add(1, 'day'), 'day')) {
-      return ' vis-tomorrow';
-    }
-    if (date.isSame(_moment().add(-1, 'day'), 'day')) {
-      return ' vis-yesterday';
-    }
-    return '';
-  }
-
-  function currentWeek(date) {
-    return date.isSame(new Date(), 'week') ? ' vis-current-week' : '';
-  }
-
-  function currentMonth(date) {
-    return date.isSame(new Date(), 'month') ? ' vis-current-month' : '';
-  }
-
-  function currentYear(date) {
-    return date.isSame(new Date(), 'year') ? ' vis-current-year' : '';
-  }
-
-  switch (this.scale) {
-    case 'millisecond':
-      return even(current.milliseconds()).trim();
-
-    case 'second':
-      return even(current.seconds()).trim();
-
-    case 'minute':
-      return even(current.minutes()).trim();
-
-    case 'hour':
-      var hours = current.hours();
-      if (this.step == 4) {
-        hours = hours + '-h' + (hours + 4);
-      }
-      return 'vis-h' + hours + today(current) + even(current.hours());
-
-    case 'weekday':
-      return 'vis-' + current.format('dddd').toLowerCase() +
-          today(current) + currentWeek(current) + even(current.date());
-
-    case 'day':
-      var day = current.date();
-      var month = current.format('MMMM').toLowerCase();
-      return 'vis-day' + day + ' vis-' + month + currentMonth(current) + even(day - 1);
-
-    case 'month':
-      return 'vis-' + current.format('MMMM').toLowerCase() +
-          currentMonth(current) + even(current.month());
-
-    case 'year':
-      var year = current.year();
-      return 'vis-year' + year + currentYear(current)+ even(year);
-
-    default:
-      return '';
-  }
-};
-
-module.exports = TimeStep;
